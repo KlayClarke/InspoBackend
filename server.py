@@ -82,6 +82,28 @@ async def add_video(file: UploadFile):
     conn.commit()
     cur.close()
     conn.close()
+  
+@app.delete('/videos/{id}')
+async def delete_video(id: int):
+   # connect to database
+    conn = psycopg2.connect(
+        database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST,
+    )
+    cur = conn.cursor()
+    cur.execute(f"DELETE FROM videos WHERE id={id}")
+    conn.commit()
+    cur.close()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM videos ORDER BY id DESC")
+    rows = cur.fetchall()
+    formatted_videos = []
+    for row in rows:
+        formatted_videos.append(
+            VideoModel(id=row[0], video_title=row[1], video_url=row[2])
+        )
+    conn.close()
+    return formatted_videos;
+  
 
 
 if __name__ == "__main__":
