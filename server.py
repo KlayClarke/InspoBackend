@@ -44,7 +44,7 @@ async def check_status():
 async def get_videos():
     # connect to database
     conn = psycopg2.connect(
-        database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host={POSTGRES_HOST},
+        database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST,
     )
     cur = conn.cursor()
     cur.execute("SELECT * FROM videos ORDER BY id DESC")
@@ -70,7 +70,7 @@ async def add_video(file: UploadFile):
     # store url in postgres database
     # connect to database
     conn = psycopg2.connect(
-        database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host={POSTGRES_HOST},
+        database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST,
     )
     cur = conn.cursor()
     cur.execute(
