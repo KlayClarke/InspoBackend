@@ -17,6 +17,8 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 
 class VideoModel(BaseModel):
@@ -62,7 +64,7 @@ async def get_videos():
 @app.post('/videos', status_code=201)
 async def add_video(file: UploadFile):
     # upload file to AWS S3
-    s3 = boto3.resource("s3")
+    s3 = boto3.resource("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.upload_fileobj(file.file, file.filename,
                           ExtraArgs={"ACL": "public-read"})
