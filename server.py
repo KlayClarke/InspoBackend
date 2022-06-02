@@ -5,20 +5,24 @@ from typing import List
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import uvicorn
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 
 load_dotenv()
+# to use a service account / initalize firebase credentials
+cred = credentials.Certificate(
+    "vstore-352120-firebase-adminsdk-8p6ee-4254d42f1c.json")
+firebase_admin.initialize_app(cred)
 
 
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+# loading collection and document
+db = firestore.client()
+videos_ref = db.collection("videos")
+videos = videos_ref.stream()
 
 
 class VideoModel(BaseModel):
@@ -39,7 +43,10 @@ app.add_middleware(
 
 @app.get("/")
 async def check_status():
-    return ("I am running!")
+    videos_list = []
+    for video in videos:
+        videos_list.append(video.to_dict())
+        return (f"I am running with {videos_list[0]}")
 
 
 @app.get("/status")
