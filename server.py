@@ -37,6 +37,11 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def check_status():
+    return ("I am running!")
+
+
 @app.get("/status")
 async def check_status():
     return ("Hello, " + POSTGRES_USER)
@@ -64,7 +69,8 @@ async def get_videos():
 @app.post('/videos', status_code=201)
 async def add_video(file: UploadFile):
     # upload file to AWS S3
-    s3 = boto3.resource("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    s3 = boto3.resource("s3", aws_access_key_id=AWS_ACCESS_KEY_ID,
+                        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     bucket = s3.Bucket(S3_BUCKET_NAME)
     bucket.upload_fileobj(file.file, file.filename,
                           ExtraArgs={"ACL": "public-read"})
@@ -82,7 +88,8 @@ async def add_video(file: UploadFile):
     conn.commit()
     cur.close()
     conn.close()
-  
+
+
 @app.delete('/videos/{id}')
 async def delete_video(id: int):
    # connect to database
@@ -102,8 +109,7 @@ async def delete_video(id: int):
             VideoModel(id=row[0], video_title=row[1], video_url=row[2])
         )
     conn.close()
-    return formatted_videos;
-  
+    return formatted_videos
 
 
 if __name__ == "__main__":
