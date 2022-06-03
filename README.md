@@ -3,7 +3,7 @@ This repo contains the back end code (Python, FastAPI, PostgreSQL, Docker) for m
 
 ## UPDATE
 
-The heroku deployment is unstable and I've run into some problems whilst using AWS S3. I am currently updating this backend to deploy it using Google Cloud (with firebase for the video storage). Thank you for your patience.
+The heroku deployment is unstable and I've run into some problems whilst using AWS S3. I am currently updating this backend to deploy it using Google Cloud (with firebase for the photo storage). Thank you for your patience.
 
 ## UPDATE #2
 
