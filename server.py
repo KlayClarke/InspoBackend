@@ -1,13 +1,11 @@
 import os
-import boto3
 import psycopg2
-import pyrebase
 from random_id import random_id
 from typing import List
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import uvicorn
-from firebase_admin import credentials, firestore, initialize_app, storage as fb_admin_storage
+from firebase_admin import credentials, firestore, initialize_app, storage
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -31,16 +29,6 @@ FIREBASE_SERVICE_ACCOUNT = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 cred = credentials.Certificate(
     FIREBASE_SERVICE_ACCOUNT)
 initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
-
-config = {
-    "apiKey": FIREBASE_API_KEY,
-    "authDomain": FIREBASE_AUTH_DOMAIN,
-    "databaseURL": FIRBASE_DATABASE_URL,
-    "storageBucket": FIREBASE_STORAGE_BUCKET,
-    "serviceAccount": FIREBASE_SERVICE_ACCOUNT
-}
-
-firebase = pyrebase.initialize_app(config)
 
 
 class VideoModel(BaseModel):
@@ -96,20 +84,18 @@ async def add_video(file: UploadFile):
     # generate random number to save with image upload (prevent naming conflict)
     randomnum = random_id()
     # upload image to firebase storage to test func
-    bucket = fb_admin_storage.bucket()
+    bucket = storage.bucket()
     blob = bucket.blob(f"images/{randomnum}{file.filename}")
     blob.upload_from_file(file.file)
+    # # get url of image from firebase storage
     blob.make_public()
-    pyrebase_storage = firebase.storage()
-    # get url of image from firebase storage
-    uploaded_file_url = pyrebase_storage.child(
-        f"images/{randomnum}{file.filename}").get_url('token')
-    # store url in postgres database
+    uploaded_file_url = blob.public_url
     # connect to database
     conn = psycopg2.connect(
         database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST,
     )
     cur = conn.cursor()
+    # save said image url to database
     cur.execute(
         f"INSERT INTO videos (video_title, video_url) VALUES ('{file.filename}', '{uploaded_file_url}')"
     )
