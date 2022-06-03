@@ -5,24 +5,32 @@ from typing import List
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import uvicorn
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
+from firebase_admin import credentials, firestore, initialize_app, storage
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 
 load_dotenv()
+
+
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET")
+
 # to use a service account / initalize firebase credentials
 cred = credentials.Certificate(
     "vstore-352120-firebase-adminsdk-8p6ee-4254d42f1c.json")
-firebase_admin.initialize_app(cred)
+initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
 
 
-# loading collection and document
-db = firestore.client()
-videos_ref = db.collection("videos")
-videos = videos_ref.stream()
+# upload image to firebase storage to test func
+file = "swiftplaygrounds.jpeg"
+bucket = storage.bucket()
+blob = bucket.blob(file)
+blob.upload_from_filename(file)
 
 
 class VideoModel(BaseModel):
@@ -73,28 +81,28 @@ async def get_videos():
     return formatted_videos
 
 
-@app.post('/videos', status_code=201)
-async def add_video(file: UploadFile):
-    # upload file to AWS S3
-    s3 = boto3.resource("s3", aws_access_key_id=AWS_ACCESS_KEY_ID,
-                        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-    bucket = s3.Bucket(S3_BUCKET_NAME)
-    bucket.upload_fileobj(file.file, file.filename,
-                          ExtraArgs={"ACL": "public-read"})
-    uploaded_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{file.filename}"
-    # store url in postgres database
-    # connect to database
-    conn = psycopg2.connect(
-        database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST,
-    )
-    cur = conn.cursor()
-    cur.execute(
-        f"INSERT INTO videos (video_title, video_url) VALUES ('{file.filename}', '{uploaded_file_url}')"
+# @app.post('/videos', status_code=201)
+# async def add_video(file: UploadFile):
+#     # upload file to AWS S3
+#     s3 = boto3.resource("s3", aws_access_key_id=AWS_ACCESS_KEY_ID,
+#                         aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+#     bucket = s3.Bucket(S3_BUCKET_NAME)
+#     bucket.upload_fileobj(file.file, file.filename,
+#                           ExtraArgs={"ACL": "public-read"})
+#     uploaded_file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{file.filename}"
+#     # store url in postgres database
+#     # connect to database
+#     conn = psycopg2.connect(
+#         database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host=POSTGRES_HOST,
+#     )
+#     cur = conn.cursor()
+#     cur.execute(
+#         f"INSERT INTO videos (video_title, video_url) VALUES ('{file.filename}', '{uploaded_file_url}')"
 
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+#     )
+#     conn.commit()
+#     cur.close()
+#     conn.close()
 
 
 @app.delete('/videos/{id}')
