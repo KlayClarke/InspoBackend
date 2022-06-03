@@ -1,6 +1,7 @@
 import os
 import boto3
 import psycopg2
+from random_id import random_id
 from typing import List
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -29,7 +30,7 @@ initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
 # upload image to firebase storage to test func
 file = "swiftplaygrounds.jpeg"
 bucket = storage.bucket()
-blob = bucket.blob(file)
+blob = bucket.blob(f"{file}{random_id()}")
 blob.upload_from_filename(file)
 
 
