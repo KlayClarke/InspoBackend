@@ -9,4 +9,4 @@ The heroku deployment is unstable and I've run into some problems whilst using A
 
 I've since deployed the api using Google's Cloud platform.
 
-Find frontend code at https://github.com/KlayClarke/vStoreFrontend
+Find frontend code at https://github.com/KlayClarke/InspoFrontend
