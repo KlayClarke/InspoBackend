@@ -1,12 +1,13 @@
 import os
 import boto3
 import psycopg2
+import pyrebase
 from random_id import random_id
 from typing import List
 from dotenv import load_dotenv
 from pydantic import BaseModel
 import uvicorn
-from firebase_admin import credentials, firestore, initialize_app, storage
+from firebase_admin import credentials, firestore, initialize_app, storage as fb_admin_storage
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,11 +21,26 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 # S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET")
+FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
+FIREBASE_AUTH_DOMAIN = os.getenv("FIREBASE_AUTH_DOMAIN")
+FIRBASE_DATABASE_URL = os.getenv("FIRBASE_DATABASE_URL")
+FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET")
+FIREBASE_SERVICE_ACCOUNT = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 
 # to use a service account / initalize firebase credentials
 cred = credentials.Certificate(
-    "vstore-352120-firebase-adminsdk-8p6ee-4254d42f1c.json")
+    FIREBASE_SERVICE_ACCOUNT)
 initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
+
+config = {
+    "apiKey": FIREBASE_API_KEY,
+    "authDomain": FIREBASE_AUTH_DOMAIN,
+    "databaseURL": FIRBASE_DATABASE_URL,
+    "storageBucket": FIREBASE_STORAGE_BUCKET,
+    "serviceAccount": FIREBASE_SERVICE_ACCOUNT
+}
+
+firebase = pyrebase.initialize_app(config)
 
 
 class VideoModel(BaseModel):
@@ -77,13 +93,17 @@ async def get_videos():
 
 @app.post('/videos', status_code=201)
 async def add_video(file: UploadFile):
+    # generate random number to save with image upload (prevent naming conflict)
+    randomnum = random_id()
     # upload image to firebase storage to test func
-    # file = "swiftplaygrounds.jpeg"
-    bucket = storage.bucket()
-    blob = bucket.blob(f"{file.filename}{random_id()}")
+    bucket = fb_admin_storage.bucket()
+    blob = bucket.blob(f"images/{randomnum}{file.filename}")
     blob.upload_from_file(file.file)
     blob.make_public()
-    uploaded_file_url = blob.public_url  # this is the image's / video's url
+    pyrebase_storage = firebase.storage()
+    # get url of image from firebase storage
+    uploaded_file_url = pyrebase_storage.child(
+        f"images/{randomnum}{file.filename}").get_url('token')
     # store url in postgres database
     # connect to database
     conn = psycopg2.connect(
