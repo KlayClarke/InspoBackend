@@ -40,7 +40,6 @@ pycodestyle==2.8.0
 pycryptodome==3.4.3
 pydantic==1.9.1
 pyparsing==3.0.9
-Pyrebase==3.0.27
 python-dateutil==2.8.2
 python-dotenv==0.20.0
 python-jwt==2.0.1
