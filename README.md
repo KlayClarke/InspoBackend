@@ -10,3 +10,11 @@ The heroku deployment is unstable and I've run into some billing problems whilst
 I've since deployed the api using Google's Cloud platform.
 
 Find frontend code at https://github.com/KlayClarke/InspoFrontend
+
+## FINAL UPDATE
+
+Ran out of money, so I've decided to focus more on creating applications that were free to deploy (deploying web apps using Vercel, creating desktop apps, etc). This was an amazingly difficult app to get up and running (python dependency conflicts, errors while deploying the database, finances), but it was extremely valuable to my growth as a self taught developer.
+
+Best,
+
+Klay
